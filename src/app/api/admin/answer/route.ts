@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -36,8 +34,7 @@ export async function POST(req: Request) {
     if (emailMatch) {
       const userEmail = emailMatch[1];
       try {
-        await resend.emails.send({
-          from: "onboarding@resend.dev",
+        await sendEmail({
           to: userEmail,
           subject: `Hash 12.0 Bot: Answer to your question`,
           html: `

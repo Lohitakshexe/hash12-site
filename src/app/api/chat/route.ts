@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { supabase } from "@/lib/supabase";
-import { Resend } from "resend";
 import crypto from "crypto";
+import { sendEmail } from "@/lib/email";
 
 const openai = new OpenAI({
   baseURL: "https://integrate.api.nvidia.com/v1",
   apiKey: process.env.NEMOTRON_API_KEY,
 });
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const BASE_SYSTEM_PROMPT = `You are the Hash 12.0 AI Assistant for DL DAV Model School Shalimar Bagh's technology festival.
 You are a helpful, conversational, and intelligent assistant. You can engage in general chit-chat, talk about technology, and answer questions about the event.
@@ -81,34 +79,29 @@ export async function POST(req: Request) {
           throw ticketError;
         }
 
-        // Send Email Notification to Organizer using Resend
-        if (process.env.RESEND_API_KEY) {
-          const mailTo = "lohitaksh20khatri@gmail.com";
-          const mailFrom = "onboarding@resend.dev";
-          
-          await resend.emails.send({
-            from: mailFrom,
-            to: mailTo,
-            subject: `[Ticket #${ticketId}] New Question from Hash 12.0 Bot`,
-            html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                <h2 style="color: #00ffff; background: #000; padding: 10px; text-align: center; text-transform: uppercase;">New Support Ticket</h2>
-                <p><strong>User Contact:</strong> ${lastMessage}</p>
-                <p><strong>Question Asked:</strong></p>
-                <blockquote style="background: #f9f9f9; border-left: 5px solid #00ffff; padding: 15px; margin: 10px 0;">
-                  ${originalQuestion}
-                </blockquote>
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-                <div style="text-align: center; margin-top: 20px;">
-                  <a href="http://localhost:3000/admin" style="background: #00ffff; color: #000; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block;">Answer Question in Dashboard</a>
-                  <p style="color: #666; font-size: 0.85em; margin-top: 15px;">
-                    (Remember to update this link to your production Vercel URL once deployed)
-                  </p>
-                </div>
+        // Send Email Notification to Organizer using Nodemailer (Gmail)
+        const organizerEmail = process.env.GMAIL_USER || "lohitaksh20khatri@gmail.com";
+        await sendEmail({
+          to: organizerEmail,
+          subject: `[Ticket #${ticketId}] New Question from Hash 12.0 Bot`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+              <h2 style="color: #00ffff; background: #000; padding: 10px; text-align: center; text-transform: uppercase;">New Support Ticket</h2>
+              <p><strong>User Contact:</strong> ${lastMessage}</p>
+              <p><strong>Question Asked:</strong></p>
+              <blockquote style="background: #f9f9f9; border-left: 5px solid #00ffff; padding: 15px; margin: 10px 0;">
+                ${originalQuestion}
+              </blockquote>
+              <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+              <div style="text-align: center; margin-top: 20px;">
+                <a href="http://localhost:3000/admin" style="background: #00ffff; color: #000; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block;">Answer Question in Dashboard</a>
+                <p style="color: #666; font-size: 0.85em; margin-top: 15px;">
+                  (Remember to update this link to your production Vercel URL once deployed)
+                </p>
               </div>
-            `,
-          });
-        }
+            </div>
+          `,
+        });
       } catch (logError) {
         console.error("Failed to log ticket or send email:", logError);
       }
