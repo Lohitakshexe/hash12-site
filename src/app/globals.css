@@ -352,7 +352,7 @@ a {
 .hero-label {
   font-family: var(--font-mono);
   color: var(--accent-cyan);
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   letter-spacing: 2px;
   text-transform: uppercase;
   margin-bottom: 1.5rem;
