@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.2",
     "ai": "^7.0.18",
     "gsap": "^3.15.0",
     "lucide-react": "^1.24.0",
@@ -16,7 +17,8 @@
     "openai": "^6.45.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "resend": "^6.17.2"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import fs from "fs";
-import path from "path";
+import { supabase } from "@/lib/supabase";
+import { Resend } from "resend";
 
 const openai = new OpenAI({
   baseURL: "https://integrate.api.nvidia.com/v1",
   apiKey: process.env.NEMOTRON_API_KEY,
 });
 
-const SYSTEM_PROMPT = `You are the Hash 12.0 AI Assistant for DL DAV Model School Shalimar Bagh's technology festival.
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const BASE_SYSTEM_PROMPT = `You are the Hash 12.0 AI Assistant for DL DAV Model School Shalimar Bagh's technology festival.
 Your goal is to answer questions about the event.
 
 Event Details:
@@ -28,17 +30,88 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // If user provided contact info (simple regex check for demo purposes), we log it server-side.
-    const lastMessage = messages[messages.length - 1].content;
-    const emailPhoneRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+|\b\d{10}\b)/;
-    if (emailPhoneRegex.test(lastMessage)) {
-      const logPath = path.join(process.cwd(), "contact_requests.txt");
-      fs.appendFileSync(logPath, `New Contact Request: ${lastMessage}\n`);
+    // 1. Fetch resolved Q&As from Supabase to dynamically expand the bot's knowledge
+    let dynamicKnowledge = "";
+    try {
+      const { data: qas } = await supabase
+        .from("knowledge_base")
+        .select("question, answer");
+      
+      if (qas && qas.length > 0) {
+        dynamicKnowledge = "\n\nAdditional Dynamic Knowledge (Answered by Organizers):\n" +
+          qas.map(item => `Q: ${item.question}\nA: ${item.answer}`).join("\n\n");
+      }
+    } catch (dbError) {
+      console.error("Error fetching knowledge base:", dbError);
     }
 
+    const fullSystemPrompt = BASE_SYSTEM_PROMPT + dynamicKnowledge;
+
+    // 2. Check if user is submitting their contact details (email or phone number)
+    const lastMessage = messages[messages.length - 1].content;
+    const emailPhoneRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+|\b\d{10}\b)/;
+
+    if (emailPhoneRegex.test(lastMessage)) {
+      // Find the user's original question (the last user message before they gave the contact info)
+      let originalQuestion = "Unknown question (context lost)";
+      for (let i = messages.length - 2; i >= 0; i--) {
+        if (messages[i].role === "user" && !emailPhoneRegex.test(messages[i].content)) {
+          originalQuestion = messages[i].content;
+          break;
+        }
+      }
+
+      // Log the ticket in Supabase
+      try {
+        const { data: ticket, error: ticketError } = await supabase
+          .from("tickets")
+          .insert([
+            {
+              user_contact: lastMessage,
+              question: originalQuestion,
+              status: "pending",
+            },
+          ])
+          .select()
+          .single();
+
+        if (ticketError) throw ticketError;
+
+        // Send Email Notification to Organizer using Resend
+        if (process.env.RESEND_API_KEY) {
+          const mailTo = "lohitaksh20khatri@gmail.com";
+          const mailFrom = "onboarding@resend.dev";
+          
+          await resend.emails.send({
+            from: mailFrom,
+            to: mailTo,
+            replyTo: `reply@yourdomain.com`, // Replace with your inbound domain once verified
+            subject: `[Ticket #${ticket.id}] New Question from Hash 12.0 Bot`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #00ffff; background: #000; padding: 10px; text-align: center; text-transform: uppercase;">New Support Ticket</h2>
+                <p><strong>User Contact:</strong> ${lastMessage}</p>
+                <p><strong>Question Asked:</strong></p>
+                <blockquote style="background: #f9f9f9; border-left: 5px solid #00ffff; padding: 15px; margin: 10px 0;">
+                  ${originalQuestion}
+                </blockquote>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="color: #666; font-size: 0.9em;">
+                  <strong>How to Answer:</strong> Reply directly to this email with your answer. Do not change the subject line containing the ticket ID.
+                </p>
+              </div>
+            `,
+          });
+        }
+      } catch (logError) {
+        console.error("Failed to log ticket or send email:", logError);
+      }
+    }
+
+    // 3. Query the Nemotron model with the expanded system prompt
     const completion = await openai.chat.completions.create({
       model: "nvidia/nemotron-3-ultra-550b-a55b",
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+      messages: [{ role: "system", content: fullSystemPrompt }, ...messages],
       temperature: 0.7,
       top_p: 0.95,
       max_tokens: 1024,
