@@ -4,16 +4,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function AdminDashboard() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
-
   const fetchTickets = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("tickets")
       .select("*")
@@ -26,6 +25,16 @@ export default function AdminDashboard() {
       setTickets(data || []);
     }
     setLoading(false);
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === "this_is_hash") {
+      setAuthenticated(true);
+      fetchTickets();
+    } else {
+      alert("Incorrect password!");
+    }
   };
 
   const handleAnswerChange = (ticketId: string, value: string) => {
@@ -57,6 +66,26 @@ export default function AdminDashboard() {
     }
     setSubmitting(null);
   };
+
+  if (!authenticated) {
+    return (
+      <div style={{ padding: "4rem 2rem", maxWidth: "400px", margin: "auto", textAlign: "center", fontFamily: "sans-serif" }}>
+        <h2 style={{ color: "#00ffff", marginBottom: "2rem" }}>Admin Access Required</h2>
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <input
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ padding: "10px", background: "#111", color: "#fff", border: "1px solid #333", borderRadius: "5px" }}
+          />
+          <button type="submit" style={{ background: "#00ffff", color: "#000", padding: "10px", border: "none", borderRadius: "5px", fontWeight: "bold", cursor: "pointer" }}>
+            Login
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: "800px", margin: "auto" }}>
