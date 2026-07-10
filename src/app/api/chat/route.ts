@@ -89,7 +89,9 @@ export async function POST(req: Request) {
           await resend.emails.send({
             from: mailFrom,
             to: mailTo,
-            replyTo: `reply@yourdomain.com`, // Replace with your inbound domain once verified
+            // To enable direct email replies, you must verify a custom domain in Resend,
+            // set up Inbound MX records, and uncomment the line below with your domain:
+            // replyTo: `reply@yourdomain.com`,
             subject: `[Ticket #${ticketId}] New Question from Hash 12.0 Bot`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
