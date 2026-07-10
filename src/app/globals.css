@@ -349,14 +349,20 @@ a {
     radial-gradient(circle at left 80%, rgba(51, 153, 255, 0.15), transparent 40%);
 }
 
+.hero-title-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+}
+
 .hero-label {
   font-family: var(--font-mono);
   color: var(--accent-cyan);
-  font-size: 1.1rem;
-  letter-spacing: 2px;
+  font-size: clamp(0.7rem, 2vw, 1.2rem);
   text-transform: uppercase;
-  margin-bottom: 1.5rem;
+  margin-bottom: -1rem;
   animation: slideInRight 1s ease-out;
+  width: 100%;
+  text-align-last: justify;
 }
 
 .hero h1 {
