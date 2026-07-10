@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { supabase } from "@/lib/supabase";
 import { Resend } from "resend";
+import crypto from "crypto";
 
 const openai = new OpenAI({
   baseURL: "https://integrate.api.nvidia.com/v1",
@@ -63,19 +64,22 @@ export async function POST(req: Request) {
 
       // Log the ticket in Supabase
       try {
-        const { data: ticket, error: ticketError } = await supabase
+        const ticketId = crypto.randomUUID();
+        const { error: ticketError } = await supabase
           .from("tickets")
           .insert([
             {
+              id: ticketId,
               user_contact: lastMessage,
               question: originalQuestion,
               status: "pending",
             },
-          ])
-          .select()
-          .single();
+          ]);
 
-        if (ticketError) throw ticketError;
+        if (ticketError) {
+          console.error("Supabase Insert Error:", ticketError);
+          throw ticketError;
+        }
 
         // Send Email Notification to Organizer using Resend
         if (process.env.RESEND_API_KEY) {
@@ -86,7 +90,7 @@ export async function POST(req: Request) {
             from: mailFrom,
             to: mailTo,
             replyTo: `reply@yourdomain.com`, // Replace with your inbound domain once verified
-            subject: `[Ticket #${ticket.id}] New Question from Hash 12.0 Bot`,
+            subject: `[Ticket #${ticketId}] New Question from Hash 12.0 Bot`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
                 <h2 style="color: #00ffff; background: #000; padding: 10px; text-align: center; text-transform: uppercase;">New Support Ticket</h2>
