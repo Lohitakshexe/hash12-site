@@ -346,23 +346,14 @@ a {
   background: 
     linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.95)),
     radial-gradient(circle at right 20%, rgba(230, 0, 115, 0.15), transparent 40%),
-    radial-gradient(circle at left 80%, rgba(51, 153, 255, 0.15), transparent 40%);
-}
-
-.hero-title-wrapper {
-  display: inline-flex;
-  flex-direction: column;
-}
-
 .hero-label {
   font-family: var(--font-mono);
   color: var(--accent-cyan);
-  font-size: clamp(0.7rem, 2vw, 1.2rem);
+  font-size: 1.2rem;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  margin-bottom: -1rem;
+  margin-bottom: 1.5rem;
   animation: slideInRight 1s ease-out;
-  width: 100%;
-  text-align-last: justify;
 }
 
 .hero h1 {

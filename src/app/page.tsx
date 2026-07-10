@@ -42,12 +42,10 @@ export default function Home() {
       </nav>
 
       <section className="hero">
-        <div className="hero-title-wrapper">
-          <div className="hero-label">DL DAV Model School Shalimar Bagh Presents</div>
-          <h1>
-            Hash <span>12.0</span>
-          </h1>
-        </div>
+        <div className="hero-label">DL DAV Model School Shalimar Bagh Presents</div>
+        <h1>
+          Hash <span>12.0</span>
+        </h1>
         <p>
           The premier inter-school technology festival. Eleven years of innovation, breaking boundaries, and creative out-thinking. Step into the twelfth era.
         </p>
