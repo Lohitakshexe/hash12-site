@@ -89,9 +89,6 @@ export async function POST(req: Request) {
           await resend.emails.send({
             from: mailFrom,
             to: mailTo,
-            // To enable direct email replies, you must verify a custom domain in Resend,
-            // set up Inbound MX records, and uncomment the line below with your domain:
-            // replyTo: `reply@yourdomain.com`,
             subject: `[Ticket #${ticketId}] New Question from Hash 12.0 Bot`,
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -102,9 +99,12 @@ export async function POST(req: Request) {
                   ${originalQuestion}
                 </blockquote>
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-                <p style="color: #666; font-size: 0.9em;">
-                  <strong>How to Answer:</strong> Reply directly to this email with your answer. Do not change the subject line containing the ticket ID.
-                </p>
+                <div style="text-align: center; margin-top: 20px;">
+                  <a href="http://localhost:3000/admin" style="background: #00ffff; color: #000; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block;">Answer Question in Dashboard</a>
+                  <p style="color: #666; font-size: 0.85em; margin-top: 15px;">
+                    (Remember to update this link to your production Vercel URL once deployed)
+                  </p>
+                </div>
               </div>
             `,
           });
