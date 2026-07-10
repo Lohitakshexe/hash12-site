@@ -345,7 +345,9 @@ a {
   padding: 4rem 10%;
   background: 
     linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.95)),
-    radial-gradient(circle at right 20%, rgba(230, 0, 115, 0.15), transparent 40%),
+    radial-gradient(circle at left 80%, rgba(51, 153, 255, 0.15), transparent 40%);
+}
+
 .hero-label {
   font-family: var(--font-mono);
   color: var(--accent-cyan);
